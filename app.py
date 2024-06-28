@@ -4,24 +4,25 @@ import tensorflow as tf
 from tensorflow.keras.models import load_model
 from PIL import Image, ImageOps
 import io
+import matplotlib.pyplot as plt
 
 app = Flask(__name__)
 
 # Load your trained model
 model = load_model('models/lenet_5_v2.keras')
 
-def preprocess_image(image_stream):
-    # Load the image
-    image = Image.open(image_stream)
-
-    # Convert the image to grayscale
-    image = image.convert('L')
-
+def preprocess_image(pixels):
+    # Convert the pixel data to a numpy array
+    image_array = np.array(pixels, dtype=np.uint8).reshape(28, 28)
+    
+    # Convert the numpy array to a PIL image
+    image = Image.fromarray(image_array, 'L')
+    
     # Invert the image (black background and white digits) if necessary
     image = ImageOps.invert(image)
 
     # Resize the image to fit within a 20x20 box while keeping the aspect ratio
-    image.thumbnail((20, 20), Image.ANTIALIAS)
+    image.thumbnail((20, 20), Image.LANCZOS)
 
     # Create a new 28x28 white image
     new_image = Image.new('L', (28, 28), (255))
@@ -42,17 +43,11 @@ def mnist():
 
 @app.route("/predict", methods=['POST'])
 def predict():
-    if 'file' in request.files:
-        # If an image file is uploaded
-        file = request.files['file']
-        image = preprocess_image(file.stream)
-        image_array = np.array(image) / 255.0
-        image_array = image_array.reshape(1, 28, 28, 1)
-    else:
-        # If pixel data is sent as JSON
-        data = request.json
-        pixels = np.array(data['pixels'], dtype=np.float32).reshape(1, 28, 28, 1) / 255.0
-        image_array = pixels
+    data = request.json
+    image = preprocess_image(data['pixels'])
+
+    image_array = np.array(image) / 255.0
+    image_array = image_array.reshape(1, 28, 28, 1)
 
     prediction = model.predict(image_array)
     digit = np.argmax(prediction)

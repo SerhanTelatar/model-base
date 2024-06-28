@@ -47,6 +47,7 @@
 <body>
     <div class="button-row">
         <div class="button-container">
+            <button id="return-home-button">Return Home</button>
             <button id="clear-button">Clear</button>
             <button id="submit-button">Submit</button>
         </div>
@@ -65,10 +66,10 @@
                 for (let j = 0; j < cols; j++) {
                     const td = document.createElement('td');
                     td.style.backgroundColor = 'white'; // Set default background color
-                    td.addEventListener('mousedown', () => td.style.backgroundColor = 'black');
+                    td.addEventListener('mousedown', () => colorBlock(i, j, rows, cols));
                     td.addEventListener('mouseover', (event) => {
                         if (event.buttons === 1) {
-                            td.style.backgroundColor = 'black';
+                            colorBlock(i, j, rows, cols);
                         }
                     });
                     tr.appendChild(td);
@@ -79,12 +80,25 @@
             container.appendChild(table);
         }
 
+        function colorBlock(i, j, rows, cols) {
+            for (let di = -1; di <= 1; di++) {
+                for (let dj = -1; dj <= 1; dj++) {
+                    const ni = i + di;
+                    const nj = j + dj;
+                    if (ni >= 0 && ni < rows && nj >= 0 && nj < cols) {
+                        const cell = document.querySelector(`tr:nth-child(${ni + 1}) td:nth-child(${nj + 1})`);
+                        if (cell) {
+                            cell.style.backgroundColor = 'black';
+                        }
+                    }
+                }
+            }
+        }
+
         function clearGrid() {
             const cells = document.querySelectorAll('td');
             cells.forEach(cell => {
-                if (cell.style.backgroundColor !== '#00ff00') {
-                    cell.style.backgroundColor = 'white';
-                }
+                cell.style.backgroundColor = 'white';
             });
         }
 
@@ -119,6 +133,9 @@
 
         document.getElementById('clear-button').addEventListener('click', clearGrid);
         document.getElementById('submit-button').addEventListener('click', submitGrid);
+        document.getElementById('return-home-button').addEventListener('click', () => {
+            window.location.href = '/';
+        });
 
         // Create a 28x28 grid
         createGrid(28, 28);
